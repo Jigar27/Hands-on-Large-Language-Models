@@ -25,3 +25,21 @@ Format:
 - Next: Day 1 — embeddings intuition + Python object model.
 
 <!-- New entries below this line -->
+
+## 2026-07-06  (~90 min)
+- Track: GenAI (Math Primer §1) + Python (Module 1)
+- What I covered: Embeddings intuition — vectors, dot product, magnitude, cosine
+  similarity; perpendicularity (dot=0). Built & ran `01_GenAI/code/day01_similarity.py`
+  (confirmed hand calcs; ran king−man+woman→queen). Python object model — names vs
+  objects, aliasing, `is` vs `==`, interning vs constant folding
+  (`02_Python/experiments/m1_names_vs_objects.py`).
+- What clicked: dot product = 4, cosine = 0.8; engineered a perpendicular vector
+  (−3, 4.5); predicted aliasing result [1,2,3,4] correctly from the model.
+- What confused me: (be honest, fill in) — initially over-claimed cosine 0.8 as
+  "nearly identical" (it's ~37°, strongly similar not identical); the perpendicular
+  question phrasing at first; the 257-is-257 surprise (constant folding vs interning).
+- Feynman check: y for dot/cosine/perpendicular & aliasing; revisit interning vs
+  folding aloud next session.
+- Next: Math Primer §2 (weighted sums / hidden states) toward Seq2Seq, OR real
+  pretrained embeddings (gensim) for a non-toy analogy; Python Module 1 cont.
+  (mutable default args trap) or Module 2.
