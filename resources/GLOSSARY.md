@@ -55,6 +55,51 @@
   returns the angle. `arccos(0.8) ~= 37 deg`.
 - **Nearest-neighbor search** - given a query vector, scan a set and return the
   most cosine-similar one(s). The mechanism under semantic search and RAG retrieval.
+- **Hidden state** - a vector that is a model's running memory: a compressed
+  summary of everything read so far. An RNN updates it one step at a time.
+- **Weighted sum / linear combination** - multiply each value by a weight and add
+  them up (a dot product of a weight vector and a value vector). If the weights
+  sum to 1, it's a weighted *average*. The atom of neurons and attention.
+- **RNN (Recurrent Neural Network)** - processes a sequence step-by-step,
+  carrying a hidden state forward and feeding its own output back in each step.
+- **Seq2Seq** - encoder RNN reads the whole input into one context vector; a
+  decoder RNN generates the output from it. The 2014 neural-translation design.
+- **Information bottleneck** - the flaw in vanilla Seq2Seq: cramming a
+  variable-length sequence into one fixed-size vector loses information (worse for
+  longer/harder inputs). Motivates attention.
+- **Vanishing gradient** - during backprop through many time-steps, the learning
+  signal is multiplied by <1 repeatedly and shrinks toward zero, so early-step
+  information can't be trained to survive. A learnability limit, distinct from
+  representational capacity.
+- **Attention (preview)** - instead of one static summary, the decoder scores
+  every encoder hidden state against its current state (dot product), softmaxes
+  those into weights, and takes a weighted average -> a fresh, per-step context.
+  Query = current decoder state, Keys = encoder states, Values = what gets averaged.
+
+## Python core / CPython internals (grows as we go)
+- **Object** - the actual thing living in memory (a list, int, string...). It
+  has a value, a type, and an identity (`id()`).
+- **Name / reference** - a label ("sticky-note") pointing at an object. A
+  variable in Python is NOT a box holding a value; it's a name bound to an object.
+- **Aliasing** - two names pointing at the *same* object. Mutating through one
+  name is visible through the other (e.g., `b = a; b.append(4)` changes `a` too).
+- **`is` vs `==`** - `is` asks "same object?" (compares `id()`/identity); `==`
+  asks "same value?". Rule: use `==` for values, reserve `is` for `None` and
+  other singletons. NEVER use `is` to compare numbers/strings.
+- **`id(obj)`** - returns a unique integer identifying an object (in CPython, its
+  memory address). Same `id` = same object.
+- **Interning** - CPython caches and reuses the *same object* for certain small,
+  common values: small integers **-5 through 256**, and many short strings. So
+  `256 is 256` is True (cached) but `257` is outside the cache.
+- **Constant folding** - a *compile-time* optimization: the compiler pre-computes
+  literal expressions (`2 + 3` -> `5`) and deduplicates identical literal
+  constants within one code block, baking them into the bytecode. This is why
+  `257 is 257` on a single line can be True even though 257 isn't interned - the
+  compiler stored one shared `257` constant. Break it by forcing a runtime value:
+  `int("257")` is NOT foldable, so it produces a distinct object (`is` -> False).
+- **Mutable vs immutable** - immutable objects (int, str, tuple, frozenset)
+  can't be changed in place; mutable ones (list, dict, set) can. This is why
+  aliasing bites with lists but not with ints.
 
 ## Statistics / sampling / causal inference (grows as we go)
 > Seeded 2026-07-06, motivated by a real problem on the **VELMA** project
