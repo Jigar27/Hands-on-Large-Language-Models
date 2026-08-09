@@ -1,7 +1,12 @@
-# Hands-on Large Language Models — Jigar's Self Study & Learning Journey
+# Hedwig's Dojo — Jigar's Self Study & Learning Journey
 
+> **Journey name:** *Hedwig's Dojo* (our master recall handle -- say it to resume
+> the whole arc). Spine text: *Hands-On Large Language Models*.
 > Mentored by **Hedwig** (harsh, evidence-first critic; never flatters).
 > Started: 2026-06-28.
+>
+> **Progress:** Day 1 (2026-07-06) + Day 2 (2026-07-12) complete. Per-day
+> interactive transcripts live in `01_GenAI/notes/dayNN_session_transcript.md`.
 
 This repo doubles as (1) my working copy of **Hands-On Large Language Models**
 (Alammar & Grootendorst) and (2) my structured path from "production ML

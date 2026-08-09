@@ -100,6 +100,12 @@
 - **Mutable vs immutable** - immutable objects (int, str, tuple, frozenset)
   can't be changed in place; mutable ones (list, dict, set) can. This is why
   aliasing bites with lists but not with ints.
+- **Singleton** - a value that only ever has ONE object instance in the whole
+  program (e.g. `None`, `True`, `False`). Always safe to compare with `is`.
+- **Sentinel value** - a special placeholder value used to mean "no real value
+  was given here," distinct from any legitimate input. `None` works as a
+  sentinel because no caller would ever pass it as real data; `0` or `""` are
+  BAD sentinels because they collide with real inputs a caller might mean.
 
 ## Statistics / sampling / causal inference (grows as we go)
 > Seeded 2026-07-06, motivated by a real problem on the **VELMA** project
