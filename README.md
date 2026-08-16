@@ -1,4 +1,4 @@
-# Hedwig's Dojo — Jigar's Self Study & Learning Journey
+# Hedwig's Dojo — DS Self Study & Learning Journey
 
 > **Journey name:** *Hedwig's Dojo* (our master recall handle -- say it to resume
 > the whole arc). Spine text: *Hands-On Large Language Models*.
