@@ -75,6 +75,27 @@
   every encoder hidden state against its current state (dot product), softmaxes
   those into weights, and takes a weighted average -> a fresh, per-step context.
   Query = current decoder state, Keys = encoder states, Values = what gets averaged.
+- **Convex combination** - a weighted sum where all weights are >= 0 AND sum to
+  1 (i.e. a weighted *average*). This is exactly what attention computes over the
+  value vectors. The reason softmax weights must be non-negative and normalized.
+- **Convex hull** - the region "spanned" by a set of points/vectors (the smallest
+  shape enclosing them). A convex combination is GUARANTEED to land inside the
+  hull of the values -> the context vector is always a sensible mixture of
+  ingredients you actually have. A negative weight would let the result escape
+  the hull (fly off to where no value vector is) -> nonsense average.
+- **Monotonic** - order-preserving: if a < b then f(a) < f(b). `e^x` is
+  monotonic, so softmax preserves the *ranking* of raw scores even while forcing
+  them positive and summing to 1. "Opposite direction" (negative dot product)
+  therefore becomes "smallest weight", never lost, just re-encoded as low attention.
+- **Softmax shift-invariance** - softmax(z) = softmax(z + c) for any constant c.
+  Only the *gaps between* scores matter, not their absolute size or sign. So a
+  score of -5 is crushed to ~0 next to +4, but wins if every other score is -7.
+  Attention judges relative standing ("most relevant of the bunch"), not raw sign.
+- **Why exponentiate in softmax** - e^x is (1) always positive -> no negative
+  "anti-attention" and no divide-by-zero in the denominator; (2) monotonic ->
+  preserves ranking; (3) sharpening -> gives top scores proportionally more
+  spotlight than a plain linear share, acting as a smooth/differentiable soft-max
+  (soft version of picking the biggest). Raw dot products give none of these.
 
 ## Python core / CPython internals (grows as we go)
 - **Object** - the actual thing living in memory (a list, int, string...). It
