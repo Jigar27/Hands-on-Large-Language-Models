@@ -69,3 +69,36 @@ Format:
 - Next: Math Primer §3 (softmax & weighted averages) -> formalize attention
   (Bahdanau), OR real pretrained embeddings (gensim). Python: Module 2 (or the
   `__defaults__`/closures follow-up).
+
+## 2026-08-08 → 2026-08-16  (Day 3 span, softmax, multi-session)
+- Track: GenAI (Math Primer §3 + §3.5)
+- What I covered: Cleared Python debt (immutable defaults, sentinel, `is` vs `==`
+  general rule — m2/m3/m4 experiments). GenAI §3 softmax: full motivation for WHY
+  softmax (vs raw dot products, vs linear normalization); irrelevant vs
+  anti-relevant; the "why exponentiate" trio; shift-invariance. New §3.5 Convexity:
+  convex combination + convex hull (context vector caged in the hull of value
+  vectors). How unbounded score magnitude destabilizes training (exploding
+  activations -> exploding gradients -> optimizer overshoot -> NaN loss). Solved
+  the softmax([2,1,0]) by-hand drill.
+- What clicked: softmax = the unique simple converter to a valid convex
+  combination (positive, sum-to-1, monotonic, smooth, divide-by-zero-proof).
+  Linear norm fails 3 ways (div-by-zero, negative weights survive, sign flips).
+  Nailed the arithmetic: w=[0.665, 0.245, 0.090].
+- What confused me / got corrected: Hedwig's "sharpening" framing was WRONG — the
+  softmax top (0.665) is slightly BELOW linear's top (0.667) because softmax never
+  zeroes anything; sharpening actually shows in the top/second RATIO (2.71 vs 2.00)
+  and grows with score-gap magnitude (-> motivates √d_k scaling in §4).
+- HONESTY CORRECTION (2026-08-16): convex combination/hull and "why unbounded
+  scores destabilize training" first got an INTRO only (Part 1c), flagged by
+  Jigar. Then given a full DEEP-DIVE (transcript Part 4): convex combo as segment
+  ->triangle->hull; the bound ‖c‖ ≤ max‖vᵢ‖ proof (which step needs wᵢ≥0 vs Σwᵢ=1);
+  training instability = TWO opposite modes — exploding gradients (M^L compounding
+  from unbounded outputs) vs vanishing gradients (softmax saturation, Jacobian
+  wᵢ(1−wᵢ)->0), plus float overflow; derived why √d_k scaling exists.
+- Feynman check: y for why-softmax, softmax by hand. TWO OPEN Feynman questions
+  left for next session (see transcript Part 4): (1) which step of the bound breaks
+  with a negative weight; (2) why unbounded scores cause vanishing-through-softmax
+  but exploding-when-fed-forward.
+- Next: answer the 2 open Feynman questions; OPTIONAL hands-on NumPy experiment
+  (convex cage + softmax gradient collapse); THEN formalize Bahdanau attention;
+  then §4 (matrices, scaled dot-product, √d_k).

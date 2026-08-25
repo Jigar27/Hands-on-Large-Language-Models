@@ -25,6 +25,21 @@ symbols. Each section below is unlocked right before the paper that requires it.
 - **Concepts:** exponentials, normalization, softmax formula, attention as a *softmax-weighted average of value vectors*.
 - **Drill:** compute softmax of [2, 1, 0] by hand; confirm it sums to 1; note how it exaggerates the largest.
 
+## §3.5 — Convexity: combinations & hulls  (unlocks: WHY softmax is stable)
+- **Intuition:** a **convex combination** is a weighted average where the weights
+  are all >= 0 and sum to 1 — it's a "blend" that can't overshoot its ingredients.
+  The **convex hull** is the smallest region enclosing a set of points (imagine a
+  rubber band snapped around them). Key fact: a convex combination of points
+  ALWAYS lands inside their convex hull — it can never escape.
+- **Concepts:** convex combination, convex hull, boundedness, why "weights in
+  [0,1] summing to 1" is the precise condition that keeps a weighted sum caged.
+- **The "aha":** this is the deep reason softmax gives stable attention — the
+  context vector is a convex combination of value vectors, so it's mathematically
+  guaranteed to stay bounded inside the region of the real history vectors.
+- **Drill:** plot 3 points in 2D; pick weights [0.5, 0.3, 0.2], compute the blend,
+  confirm it sits inside the triangle. Then try weights [1.5, -0.5, 0] (NOT convex)
+  and watch the result fly outside the triangle.
+
 ## §4 — Matrices & the Transformer core  (unlocks: Attention Is All You Need)
 - **Intuition:** a matrix multiply = applying the same linear transformation to many vectors at once (this is why GPUs love it).
 - **Concepts:** matrix multiplication (shapes!), Q/K/V projections, scaled dot-product attention `softmax(QKᵀ/√d_k)V`, why we divide by √d_k (keeps the softmax from saturating), multi-head = several attention "views" in parallel subspaces, positional encoding (sinusoids), LayerNorm (intuition only).

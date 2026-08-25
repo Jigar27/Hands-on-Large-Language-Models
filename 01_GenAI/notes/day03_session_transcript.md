@@ -178,9 +178,183 @@ exploding, sign-flipping, or fleeing mess.
 
 ---
 
-## Part 2 — Pending drill (still open)
+---
 
-`softmax([2, 1, 0])` by hand, given `e²≈7.39, e¹≈2.72, e⁰=1`:
-- the three weights, do they sum to ~1,
-- and the sharpening test: does the top score land above or below `2/3 ≈ 0.67`?
+## Part 1c — Convexity taught + "why does unbounded magnitude destabilize training?" (session 2026-08-16)
+
+### Follow-up A (verbatim — Jigar)
+> "I dont know about convex combination and convex hull, so you probably add that
+> in our maths syllabus."
+
+**Action taken:** added **§3.5 — Convexity** to `00_Curriculum/MATH_PRIMER.md`.
+**Taught:**
+- **Convex combination** = weighted sum with all weights ≥ 0 AND summing to 1 (a
+  "legal blend" — like mixing paint 50/30/20; result lives between the ingredients,
+  can't overshoot them).
+- **Convex hull** = smallest region enclosing a set of points (rubber band snapped
+  around nails at each point).
+- **Load-bearing fact:** a convex combination ALWAYS lands inside the convex hull.
+  Non-negative + sum-to-1 is exactly the condition that cages the result. A
+  negative weight or weights not summing to 1 lets the point escape the hull.
+- **Tie to attention:** `c = Σ wᵢ vᵢ` with softmax weights is a convex combination of
+  value vectors → `c` is caged inside the region of real history vectors.
+
+### Follow-up B (verbatim — Jigar)
+> "You said dot product can produce unbounded scores, how this unbounded magnitude
+> scores makes training unstable?"
+
+**Hedwig's answer — three failure chains:**
+1. **Exploding activations → exploding gradients.** Unnormalized giant score → giant
+   context vector `c` → magnitude compounds layer over layer. Backprop = chain
+   rule = a PRODUCT of terms across layers; huge forward activations → huge
+   derivative terms → gradient explodes to enormous values (or inf/NaN).
+2. **Huge gradient → optimizer overshoots.** Update is `w ← w − lr·grad`. The learning
+   rate assumes reasonably-sized gradients; a 10,000× gradient → a 10,000× step →
+   catapults across the loss surface past the minimum → loss oscillates/diverges
+   to NaN. Visible symptom = loss curve looks like a seismograph, not a slope.
+3. **Scale-sensitivity → no consistent signal.** Magnitude of scores carries
+   meaning it shouldn't; same relative relevances but different absolute sizes
+   (longer vectors) → wildly different context magnitudes → model chases a moving
+   target. Softmax's shift/scale-robustness removes this — only RELATIVE scores
+   matter.
+
+**How softmax fixes all three:** weights in (0,1) summing to 1 → `c` is a convex
+combination → magnitude bounded by the value vectors (caged in convex hull) →
+bounded activations → bounded gradients → fixed learning rate stays appropriate
+→ loss descends smoothly. Causal chain snipped at the first link.
+
+**New glossary term to bank:** exploding gradient.
+
+---
+
+## Part 2 — Drill SOLVED: softmax([2,1,0]) (session 2026-08-16)
+
+`softmax([2, 1, 0])`, given `e²≈7.39, e¹≈2.72, e⁰=1`.
+
+**Jigar's work:** sum = 11.107; w₁ = 7.39/11.107 = 0.67, w₂ = 0.25, w₃ = 0.09.
+(Minor typo: wrote "7.39/10.107" but the result 0.67 proves he used 11.107.)
+**Precise:** w = [0.665, 0.245, 0.090], sums to 1.000. Arithmetic CORRECT.
+
+**The twist — Hedwig's drill framing was WRONG (sensei self-correction).**
+Hedwig claimed softmax "sharpens" so the top weight lands ABOVE 0.67. Reality:
+- Softmax top = 0.665; linear-normalization top = 2/3 = 0.667.
+- Softmax top is actually SLIGHTLY BELOW linear's top. Claim busted by the numbers.
+
+**Why:** softmax NEVER assigns exactly 0. Linear norm deleted the bottom element
+(0/3 = 0) and dumped its mass on the top two; softmax gave the bottom 0.090, so
+the top gets slightly less.
+
+**Where sharpening actually shows up — the top/second RATIO:**
+- Linear norm: 0.667/0.333 = 2.00
+- Softmax:     0.665/0.245 = 2.71  → softmax WIDENED the #1-vs-#2 gap.
+
+**Deeper takeaway:** softmax sharpness scales with the MAGNITUDE of the score
+gaps. `[2,1,0]` (small gaps) → gentle. `[4,2,0]` → top rockets to ~0.87 (much
+peakier). Same shape, bigger scale, sharper spotlight. This is exactly why the
+Transformer divides by √d_k (§4) — to control sharpness and stop softmax
+saturating into a hard one-hot. Jigar discovered the problem that scaling solves.
+
+---
+
+## Part 3 — Next up
+Formalize Bahdanau attention from the softmax now fully owned.
+
+---
+
+## Part 4 — DEEP-DIVE: convexity + why unbounded scores destabilize training (session 2026-08-16)
+
+### Trigger (verbatim — Jigar)
+> "Actually, Convex combination and why unbounded scores destabilize training is
+> yet to be covered in depth."
+
+(He correctly flagged that Part 1c gave only an INTRO. This is the depth pass.)
+
+---
+
+### Part A — Convex combinations & convex hulls, in depth
+
+**A.1 — Two points.** For points p, q: `r(t) = (1−t)p + t·q`, t ∈ [0,1].
+- t=0 -> p; t=1 -> q; t=0.5 -> midpoint. Weights (1−t) and t are always ≥ 0 and
+  always sum to 1. The set of all such r = the STRAIGHT SEGMENT between p and q.
+- Break the rules: t=1.5 (weight >1, other weight −0.5 <0) -> r shoots PAST q,
+  off the segment. t=−0.3 -> shoots off the other end. => non-negativity + sum-to-1
+  is EXACTLY what confines you to the segment.
+
+**A.2 — Three points.** `r = w₁p + w₂q + w₃s`, wᵢ≥0, Σwᵢ=1 -> the FILLED TRIANGLE
+with corners p,q,s. Corners = pure weights [1,0,0] etc.; edges = one weight 0;
+interior = all positive. Softmax weights [0.665,0.245,0.090] land inside, near p.
+
+**A.3 — Formal defs.**
+- Convex combination of v₁..vₙ = any Σ wᵢvᵢ with all wᵢ ≥ 0 and Σwᵢ = 1.
+- Convex hull = set of ALL convex combinations = smallest convex set containing
+  the points (rubber-band region).
+- Convex set = for any two points in it, the whole segment between them is also
+  in it (no dents/holes; disc convex, crescent not).
+
+**A.4 — The boundedness THEOREM (the payoff).** If c = Σ wᵢvᵢ is a convex combo:
+```
+‖c‖ = ‖Σ wᵢ vᵢ‖  ≤  Σ wᵢ‖vᵢ‖  ≤  (Σ wᵢ)·max‖vᵢ‖  =  max‖vᵢ‖
+```
+PUNCHLINE: the context vector c can NEVER be longer than the longest value
+vector. Mathematically caged inside the data.
+- 1st ≤ : triangle inequality (always holds).
+- 2nd ≤ : NEEDS wᵢ ≥ 0 (to pull the max out). A negative weight breaks THIS step;
+  c can blow past max‖vᵢ‖.
+- final = : NEEDS Σwᵢ = 1.
+Both softmax properties are load-bearing in the proof. This is the rigorous
+"caged in the convex hull" — the whole reason attention outputs are bounded.
+
+---
+
+### Part B — Why unbounded scores destabilize training, in depth
+"Unstable" has TWO OPPOSITE failure modes; softmax touches both.
+
+**B.1 — Mechanism 1: unbounded OUTPUTS -> EXPLODING gradients (compounding).**
+Backprop = chain rule = a PRODUCT of per-layer factors. Each factor scales with
+activation magnitude M. Across L layers the product scales like M^L — EXPONENTIAL
+in depth. M=10, L=12 -> ~10^12 gradients -> weights lurch -> oscillate -> NaN.
+With a convex-combination output, Part A pins ‖c‖ ≤ max‖vᵢ‖, so M is capped at the
+DATA scale and can't grow layer-over-layer -> M^L stops exploding. The convexity
+bound is EXACTLY what caps M, which is EXACTLY what prevents the blow-up.
+
+**B.2 — Mechanism 2: unbounded SCORES INTO softmax -> VANISHING gradients.**
+Softmax Jacobian diagonal: ∂wᵢ/∂sᵢ = wᵢ(1 − wᵢ). Zero at BOTH extremes
+(wᵢ->0 and wᵢ->1), max at wᵢ=0.5. Huge scores SATURATE softmax (one weight ~1,
+rest ~0 = hard one-hot) -> wᵢ(1−wᵢ) ~ 0 everywhere -> gradient through softmax
+DIES -> training STALLS.
+- Saturation = a squashing fn pushed so far into its flat region that its
+  derivative ~0, so gradients can't flow back (same disease as sigmoid/tanh).
+DOUBLE BIND: scores too big -> saturate -> vanishing; unbounded outputs fed
+forward -> exploding.
+
+**B.3 — Mechanism 3: raw numerical overflow.** e^1000 = inf in float32;
+inf/inf = NaN; one NaN contaminates the whole net. Fix: subtract the max score
+first (softmax(z) = softmax(z − max z), valid by shift-invariance) -> largest
+exponent becomes e^0 = 1, dodging overflow.
+
+**B.4 — Lands on √d_k (hook to §4).** Dot products q·k in d dims grow ~√d
+(unit-scale entries). d=512 -> scores ~√512 ≈ 23 -> deep in saturation (Mech 2).
+Dividing by √d_k rescales scores to ~unit -> softmax stays in its healthy
+high-gradient region. => derived the exact disease √d_k cures (that's §4).
+
+---
+
+### OPEN Feynman-gate questions (Jigar to answer NEXT SESSION)
+1. In the bound ‖c‖ ≤ max‖vᵢ‖, WHICH step breaks if a weight is negative, and what
+   goes wrong geometrically?
+2. Unbounded scores -> VANISHING gradients through softmax, but EXPLODING
+   gradients when fed forward as activations. One sentence each: why opposite
+   directions?
+
+### OFFERED (not yet done): hands-on NumPy experiment — watch a convex combo stay
+caged inside the triangle while a non-convex one escapes; watch softmax gradients
+collapse (wᵢ(1−wᵢ) -> 0) as scores grow. Jigar to decide next session.
+
+### New glossary term to bank: Saturation.
+
+---
+
+## Part 5 — Next up (after the open questions above)
+Formalize Bahdanau attention from the softmax now fully owned; then §4 (matrices,
+scaled dot-product attention, √d_k).
 

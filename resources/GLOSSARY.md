@@ -96,6 +96,19 @@
   preserves ranking; (3) sharpening -> gives top scores proportionally more
   spotlight than a plain linear share, acting as a smooth/differentiable soft-max
   (soft version of picking the biggest). Raw dot products give none of these.
+- **Exploding gradient** - when gradient magnitudes grow uncontrollably as they
+  propagate backward, because backprop multiplies many terms across layers (chain
+  rule) and huge forward activations make each term huge. Result: the optimizer
+  takes a wildly oversized step (`w ← w − lr·grad`) and overshoots the minimum ->
+  loss oscillates or diverges to NaN ("unstable training"). Unbounded dot-product
+  scores are one upstream cause; softmax (bounded weights -> bounded context
+  vector) snips this at the source.
+- **Saturation** - when a squashing function (softmax, sigmoid, tanh) is pushed so
+  far into its flat region that its derivative is ~0, so gradients can't flow back
+  through it -> VANISHING gradients, training stalls. For softmax the Jacobian
+  diagonal is w_i(1 - w_i), which is 0 at both w_i->0 and w_i->1 (max at 0.5), so
+  huge scores that drive softmax to a hard one-hot kill the gradient. This is the
+  disease the Transformer's /sqrt(d_k) scaling prevents.
 
 ## Python core / CPython internals (grows as we go)
 - **Object** - the actual thing living in memory (a list, int, string...). It
